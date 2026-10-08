@@ -13,7 +13,7 @@ version = 1.1.0
 
 # kivymd was removed (it was never imported and only made the build heavier).
 # "android" is provided automatically by python-for-android.
-requirements = python3,kivy==2.3.0,android,camera4kivy,gestures4kivy
+requirements = python3,kivy==2.3.0,android,pyjnius
 # The playback service: runs in its own process, owns the MediaPlayer and the
 # notification.  Format  Name:script.py  -> Java class <package>.ServiceMusic
 # (the name "Music" is also used in audio_backend.py).
@@ -28,7 +28,7 @@ fullscreen = 0
 # Android 13+ uses READ_MEDIA_AUDIO, older versions use READ_EXTERNAL_STORAGE.
 # WAKE_LOCK keeps the music playing when the screen turns off,
 # FOREGROUND_SERVICE lets the playback service keep running in the background.
-android.permissions = CAMERA, READ_MEDIA_IMAGES, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
+android.permissions = CAMERA
 
 android.api = 33
 android.minapi = 24
