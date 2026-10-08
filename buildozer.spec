@@ -1,40 +1,53 @@
 [app]
-
-# (str) Title of your application
-title = Camkaze Camera
-
-# (str) Package name
+title = CAMKAZE
 package.name = camkaze
+package.domain = org.camkaze
 
-# (str) Package domain (needed for android/ios packaging)
-package.domain = com.camkaze
-
-# (str) Application version
-version = 0.1
-
-# (str) Source code where the main.py live
 source.dir = .
+# NOTE: buildozer does not support comments at the end of a value line,
+# so every comment lives on its own line.
+# ttf is required: the bundled font is what makes Arabic text readable.
+source.include_exts = py,png,jpg,kv,atlas,json,ttf
 
-# (list) Source files to include
-source.include_exts = py,png,jpg,kv,atlas
+version = 1.1.0
 
-# (list) Application requirements
-requirements = python3,kivy,android
+# kivymd was removed (it was never imported and only made the build heavier).
+# "android" is provided automatically by python-for-android.
+requirements = python3,kivy==2.3.0,android
 
-# (list) Permissions
+# The playback service: runs in its own process, owns the MediaPlayer and the
+# notification.  Format  Name:script.py  -> Java class <package>.ServiceMusic
+# (the name "Music" is also used in audio_backend.py).
+
+orientation = portrait
+fullscreen = 0
+
+#icon.filename = %(source.dir)s/icon.png
+#presplash.filename = %(source.dir)s/presplash.png
+#android.presplash_color = #0E0E13
+
+# Android 13+ uses READ_MEDIA_AUDIO, older versions use READ_EXTERNAL_STORAGE.
+# WAKE_LOCK keeps the music playing when the screen turns off,
+# FOREGROUND_SERVICE lets the playback service keep running in the background.
 android.permissions = CAMERA, READ_MEDIA_IMAGES, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
 
-# (int) Target Android API
 android.api = 33
-
-# (int) Minimum API your APK will support
 android.minapi = 24
-
-# (int) Android SDK version to use
-android.sdk = 33
-
-# (str) Android NDK version to use
 android.ndk = 25b
-
-# (bool) Accept SDK license automatically
+android.enable_androidx = True
+android.archs = arm64-v8a
 android.accept_sdk_license = True
+
+android.keystore = 
+android.keystore_passwd = 
+android.keyalias = 
+android.keyalias_passwd = 
+android.release_artifact = apk
+# Signing: the workflow passes the keystore through P4A_RELEASE_* environment
+# variables, so the android.keystore* fields must stay unset here.
+
+p4a.branch = v2024.01.21
+
+[buildozer]
+log_level = 2
+warn_on_root = 1
