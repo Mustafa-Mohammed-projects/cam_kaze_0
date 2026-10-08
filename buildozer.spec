@@ -13,8 +13,7 @@ version = 1.1.0
 
 # kivymd was removed (it was never imported and only made the build heavier).
 # "android" is provided automatically by python-for-android.
-requirements = python3,kivy==2.3.0,android
-
+requirements = python3,kivy==2.3.0,android,camera4kivy,gestures4kivy
 # The playback service: runs in its own process, owns the MediaPlayer and the
 # notification.  Format  Name:script.py  -> Java class <package>.ServiceMusic
 # (the name "Music" is also used in audio_backend.py).
