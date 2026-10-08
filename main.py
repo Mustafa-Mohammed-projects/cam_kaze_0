@@ -1,77 +1,110 @@
-import os
-import time
 from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.camera import Camera
-from kivy.uix.button import Button
-from kivy.uix.label import Label
+from kivy.lang import Builder
 from kivy.utils import platform
+from kivy.clock import Clock
+from camera4kivy import Preview
 
-class CamkazeApp(App):
+KV = """
+FloatLayout:
+    CamPreview:
+        id: preview
+        pos_hint: {'x': 0, 'y': 0}
+        size_hint: 1, 1
+
+    BoxLayout:
+        size_hint: 1, None
+        height: dp(110)
+        padding: dp(20)
+        spacing: dp(20)
+        canvas.before:
+            Color:
+                rgba: 0, 0, 0, 0.5
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        Button:
+            id: flash_btn
+            text: 'Flash: OFF'
+            on_release: app.toggle_flash()
+        Button:
+            text: 'CAPTURE'
+            bold: True
+            on_release: app.capture()
+        Button:
+            id: cam_btn
+            text: 'Camera: BACK'
+            on_release: app.switch_camera()
+
+    Label:
+        id: status
+        text: ''
+        size_hint: 1, None
+        height: dp(40)
+        pos_hint: {'top': 0.98}
+"""
+
+class CamPreview(Preview):
+    pass
+
+class CamKazeApp(App):
+    facing = 'back'
+    flash_on = False
+
     def build(self):
-        self.layout = BoxLayout(orientation='vertical')
-        
-        # Camera Widget
-        self.camera = Camera(index=0, resolution=(1280, 720), play=True)
-        self.layout.add_widget(self.camera)
-        
-        # Status Label
-        self.status_label = Label(
-            text="Ready", 
-            size_hint_y=0.1,
-            color=(1, 1, 1, 1)
-        )
-        self.layout.add_widget(self.status_label)
-        
-        # Capture Button
-        self.capture_button = Button(
-            text="Capture Photo", 
-            size_hint_y=0.15,
-            background_color=(0.2, 0.6, 1, 1)
-        )
-        self.capture_button.bind(on_press=self.take_picture)
-        self.layout.add_widget(self.capture_button)
-        
-        # Request Android Runtime Permissions
-        if platform == 'android':
-            self.request_android_permissions()
-            
-        return self.layout
+        self.root_widget = Builder.load_string(KV)
+        return self.root_widget
 
-    def request_android_permissions(self):
-        from android.permissions import request_permissions, Permission
-        request_permissions([
-            Permission.CAMERA,
-            Permission.READ_MEDIA_IMAGES,
-            Permission.WRITE_EXTERNAL_STORAGE,
-            Permission.READ_EXTERNAL_STORAGE
-        ])
+    @property
+    def preview(self):
+        return self.root_widget.ids.preview
 
-    def get_save_directory(self):
+    def on_start(self):
         if platform == 'android':
-            from android.storage import primary_external_storage_path
-            base_dir = primary_external_storage_path()
-            target_dir = os.path.join(base_dir, 'Pictures', 'camkaze')
+            from android.permissions import request_permissions, Permission
+            request_permissions([Permission.CAMERA], self._on_permissions)
         else:
-            target_dir = os.path.join(os.path.expanduser('~'), 'Pictures', 'camkaze')
-            
-        if not os.path.exists(target_dir):
-            os.makedirs(target_dir, exist_ok=True)
-            
-        return target_dir
+            self._start_camera()
 
-    def take_picture(self, instance):
-        try:
-            timestamp = time.strftime("%Y%m%d_%H%M%S")
-            filename = f"CAMKAZE_{timestamp}.png"
-            directory = self.get_save_directory()
-            full_path = os.path.join(directory, filename)
-            
-            # Export picture from Camera preview
-            self.camera.export_to_png(full_path)
-            self.status_label.text = f"Saved: {filename}"
-        except Exception as e:
-            self.status_label.text = f"Error: {str(e)}"
+    def _on_permissions(self, permissions, grants):
+        if all(grants):
+            Clock.schedule_once(lambda dt: self._start_camera(), 0)
+        else:
+            self.root_widget.ids.status.text = 'Camera permission denied'
+
+    def _start_camera(self):
+        self.preview.connect_camera(camera_id=self.facing,
+                                    filepath_callback=self.on_saved)
+
+    def on_stop(self):
+        self.preview.disconnect_camera()
+
+    def on_pause(self):
+        self.preview.disconnect_camera()
+        return True
+
+    def on_resume(self):
+        self._start_camera()
+
+    def toggle_flash(self):
+        self.flash_on = not self.flash_on
+        self.preview.flash('on' if self.flash_on else 'off')
+        self.root_widget.ids.flash_btn.text = (
+            'Flash: ON' if self.flash_on else 'Flash: OFF')
+
+    def switch_camera(self):
+        self.facing = 'front' if self.facing == 'back' else 'back'
+        self.preview.select_camera(self.facing)
+        self.root_widget.ids.cam_btn.text = f'Camera: {self.facing.upper()}'
+
+    def capture(self):
+        # Saves to Pictures/CamKaze (shared storage)
+        self.preview.capture_photo(location='shared', subdir='CamKaze')
+
+    def on_saved(self, file_path):
+        self.root_widget.ids.status.text = 'Photo saved to Pictures/CamKaze'
+        Clock.schedule_once(
+            lambda dt: setattr(self.root_widget.ids.status, 'text', ''), 2.5)
 
 if __name__ == '__main__':
-    CamkazeApp().run()
+    CamKazeApp().run()
