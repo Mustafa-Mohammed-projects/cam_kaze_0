@@ -9,20 +9,22 @@ package.name = camkaze
 # (str) Package domain (needed for android/ios packaging)
 package.domain = com.camkaze
 
+# (str) Application version
+version = 0.1
+
 # (str) Source code where the main.py live
 source.dir = .
 
-# (list) Source files to include (let empty to include all the files)
+# (list) Source files to include
 source.include_exts = py,png,jpg,kv,atlas
 
 # (list) Application requirements
-# comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy==2.3.0,android
+requirements = python3,kivy,android
 
 # (list) Permissions
 android.permissions = CAMERA, READ_MEDIA_IMAGES, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
 
-# (int) Target Android API, should be 33 for Android 13
+# (int) Target Android API
 android.api = 33
 
 # (int) Minimum API your APK will support
@@ -34,7 +36,5 @@ android.sdk = 33
 # (str) Android NDK version to use
 android.ndk = 25b
 
-# (bool) If True, then skip building an APK ($ buildozer android debug)
+# (bool) Accept SDK license automatically
 android.accept_sdk_license = True
-android.archs = arm64-v8a
-#android.release_artifact = apk
